@@ -245,10 +245,17 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
-                $batches = \array_chunk(
-                    \array_keys($identifiersForProvider),
-                    $adapter->getMaxMessagesPerRequest()
-                );
+                if ($provider->getAttribute('provider') === 'smtp') {
+                    $batches = array_map(
+                        fn ($identifier) => [$identifier],
+                        array_keys($identifiersForProvider)
+                    );
+                } else {
+                    $batches = \array_chunk(
+                        \array_keys($identifiersForProvider),
+                        $adapter->getMaxMessagesPerRequest()
+                    );
+                }
 
                 return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
                     return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
